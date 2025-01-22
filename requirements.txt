@@ -1,6 +1,11 @@
+aiogithubapi
+aiortc
+marisa-trie
 pybase64
 RPi.GPIO
 rrdtool
 Shapely
 smbus_cffi
 spidev
+uvloop
+questdb

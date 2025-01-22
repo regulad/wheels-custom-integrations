@@ -5,6 +5,7 @@ on:
     branches:
       - master
     paths:
+      - .github/workflows/wheels.yml
       - requirements.txt
   pull_request:
     branches:
@@ -22,7 +23,7 @@ jobs:
       apk: ${{ steps.apk.outputs.packages }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Get constraints
         run: |
@@ -30,7 +31,7 @@ jobs:
           sed -i "/numpy/d" constraints.txt
 
       - name: Upload constraints.txt
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v4.6.0
         with:
           name: constraints
           path: ./constraints.txt
@@ -43,14 +44,14 @@ jobs:
       fail-fast: false
       matrix:
         arch: ["aarch64", "armhf", "armv7", "amd64", "i386"]
-        abi: ["cp310", "cp311"]
+        abi: ["cp312", "cp313"]
 
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Download constraints.txt
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.8
         with:
           name: constraints
 
@@ -69,8 +70,15 @@ jobs:
         run: |
           touch .env_file
 
+      - name: (Un)comment packages
+        run: |
+          # Some packages are not buildable on armhf anymore
+          if [ "${{ matrix.arch }}" = "armhf" ]; then
+            sed -i "s|Shapely|# Shapely|g" requirements.txt
+          fi
+
       - name: Build wheels
-        uses: home-assistant/wheels@2023.04.0
+        uses: home-assistant/wheels@2024.11.0
         with:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2
@@ -81,4 +89,4 @@ jobs:
           test: ${{ steps.test.outputs.is_test }}
           constraints: "constraints.txt"
           requirements: "requirements.txt"
-          apk: "libffi-dev;rrdtool-dev;geos-dev"
+          apk: "libffi-dev;rrdtool-dev;geos-dev;opus-dev;libvpx-dev;ffmpeg-dev;libsrtp-dev;libressl-dev"
